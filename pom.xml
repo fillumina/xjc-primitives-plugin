@@ -213,4 +213,16 @@
       </build>
     </profile>
   </profiles>
+
+  <!--
+    INSTRUCTIONS FOR DEPLOYING:
+    - remember to set default JDK to version 21
+    - deploy with (-X is for verbose error reporting):
+      mvn -Pcentral clean deploy -X
+    - complete the procedure:
+      https://central.sonatype.com/publishing/deployments
+    - look for the 'Staging repositories' and then 'close' it.
+    - wait a little until it says 'repository closed'
+    - click on 'release'
+  -->
 </project>
