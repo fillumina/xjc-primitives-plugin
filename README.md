@@ -10,9 +10,11 @@ protected int count;          // what XJC generates
 protected Integer count;      // what this plugin generates
 ```
 
-The plugin is the primitive half of the old `com.fillumina:krasa-jaxb-tools`, split out into its
-own artifact so that a project that only needs the boxed types does not depend on the validation
-annotations as well.
+The plugin was split out of [`com.fillumina:krasa-jaxb-tools`](
+https://github.com/fillumina/krasa-jaxb-tools), which continues the XJC addon that Vojtech Krasa
+wrote; the code here is a port of that one. It becomes its own artifact so that a project that only
+needs the boxed types does not depend on the validation annotations as well, and so that adding it
+does not bring the bean validation plugin with it.
 
 ## Requirements
 

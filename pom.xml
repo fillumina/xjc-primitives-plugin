@@ -35,11 +35,17 @@
       <name>Francesco Illuminati</name>
       <email>fillumina@gmail.com</email>
     </developer>
-    <developer>
+  </developers>
+
+  <!-- The code is a port of the plugin Vojtech Krasa wrote, which the project this was split from
+       continues. He is not a maintainer of this artifact, which is what the developers list above
+       records, but the authorship is his. -->
+  <contributors>
+    <contributor>
       <name>Vojtech Krasa</name>
       <email>vojta.krasa@gmail.com</email>
-    </developer>
-  </developers>
+    </contributor>
+  </contributors>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
