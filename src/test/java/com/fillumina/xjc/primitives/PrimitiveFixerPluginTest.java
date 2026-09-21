@@ -2,8 +2,13 @@ package com.fillumina.xjc.primitives;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JFieldVar;
+import com.sun.codemodel.JMod;
 import com.sun.tools.xjc.Driver;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -39,12 +44,18 @@ class PrimitiveFixerPluginTest {
         assertTrue(generated.contains("protected Long amount;"), generated);
         assertTrue(generated.contains("protected Boolean active;"), generated);
         assertTrue(generated.contains("protected Double ratio;"), generated);
+        assertTrue(generated.contains("protected Byte tiny;"), generated);
+        assertTrue(generated.contains("protected Short small;"), generated);
+        assertTrue(generated.contains("protected Float fraction;"), generated);
         assertTrue(generated.contains("protected Boolean flag;"), generated);
 
         assertTrue(generated.contains("public Integer getCount()"), generated);
         assertTrue(generated.contains("public void setCount(Integer value)"), generated);
         assertTrue(generated.contains("public Boolean isActive()"), generated);
         assertTrue(generated.contains("public void setActive(Boolean value)"), generated);
+        assertTrue(generated.contains("public Byte getTiny()"), generated);
+        assertTrue(generated.contains("public Short getSmall()"), generated);
+        assertTrue(generated.contains("public void setFraction(Float value)"), generated);
 
         assertFalse(generated.contains("protected int count;"), generated);
         assertFalse(generated.contains("public int getCount()"), generated);
@@ -58,6 +69,23 @@ class PrimitiveFixerPluginTest {
         assertTrue(generated.contains("protected int count;"), generated);
         assertTrue(generated.contains("public int getCount()"), generated);
         assertTrue(generated.contains("public void setCount(int value)"), generated);
+    }
+
+    /**
+     * A primitive field whose accessor is missing cannot be followed, and the plugin says so rather
+     * than leaving a half-boxed property behind. XJC always writes the accessors, so the situation
+     * is built here instead of through a schema.
+     */
+    @Test
+    void aPrimitiveFieldWithoutAccessorsIsRefused() throws Exception {
+        JCodeModel codeModel = new JCodeModel();
+        JDefinedClass bean = codeModel._class("example.Bean");
+        JFieldVar field = bean.field(JMod.PROTECTED, codeModel.INT, "count");
+
+        IllegalStateException thrown = assertThrows(IllegalStateException.class,
+                () -> new PrimitiveFixerPlugin().getter(bean, field));
+
+        assertTrue(thrown.getMessage().contains("count"), thrown.getMessage());
     }
 
     /**

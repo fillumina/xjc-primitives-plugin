@@ -9,6 +9,9 @@
       <xs:element name="amount" type="xs:long"/>
       <xs:element name="active" type="xs:boolean"/>
       <xs:element name="ratio" type="xs:double"/>
+      <xs:element name="tiny" type="xs:byte"/>
+      <xs:element name="small" type="xs:short"/>
+      <xs:element name="fraction" type="xs:float"/>
     </xs:sequence>
     <xs:attribute name="flag" type="xs:boolean"/>
   </xs:complexType>

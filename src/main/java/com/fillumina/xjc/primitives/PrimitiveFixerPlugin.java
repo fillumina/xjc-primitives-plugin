@@ -2,6 +2,7 @@ package com.fillumina.xjc.primitives;
 
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JFormatter;
 import com.sun.codemodel.JMethod;
@@ -79,8 +80,8 @@ public class PrimitiveFixerPlugin extends Plugin {
                 }
                 JClass boxedType = boxedType(classOutline, boxedClass);
                 field.type(boxedType);
-                getter(classOutline, field).type(boxedType);
-                setter(classOutline, field).listParams()[0].type(boxedType);
+                getter(classOutline.implClass, field).type(boxedType);
+                setter(classOutline.implClass, field).listParams()[0].type(boxedType);
             }
         }
         return true;
@@ -99,9 +100,9 @@ public class PrimitiveFixerPlugin extends Plugin {
      * Finds the getter of a field: the method that starts with {@code get} or {@code is} and whose
      * body is a plain {@code return field;}.
      */
-    private JMethod getter(ClassOutline classOutline, JFieldVar field) {
+    JMethod getter(JDefinedClass type, JFieldVar field) {
         String expected = "return " + field.name() + ";";
-        for (JMethod method : classOutline.implClass.methods()) {
+        for (JMethod method : type.methods()) {
             String name = method.name();
             if (method.type().isPrimitive()
                     && (name.startsWith("get") || name.startsWith("is"))
@@ -117,9 +118,9 @@ public class PrimitiveFixerPlugin extends Plugin {
      * Finds the setter of a field: the method that starts with {@code set} and whose body assigns
      * the field from its own parameter.
      */
-    private JMethod setter(ClassOutline classOutline, JFieldVar field) {
+    JMethod setter(JDefinedClass type, JFieldVar field) {
         String expected = "this." + field.name() + " =";
-        for (JMethod method : classOutline.implClass.methods()) {
+        for (JMethod method : type.methods()) {
             String name = method.name();
             if (method.type().isPrimitive()
                     && name.startsWith("set")
