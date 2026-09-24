@@ -9,3 +9,8 @@
 - The service file registers this plugin alone, so adding it does not bring the bean validation
   plugin with it.
 - The option name is unchanged: `-XReplacePrimitives`.
+- New: the `include` and `exclude` options select which fields are boxed, with the glob syntax of
+  the sibling bean validation plugin: `-XReplacePrimitives:include=com.acme.Invoice#amount`. Without
+  a selector every primitive is boxed, as before; with one, only the fields it selects. A selector
+  that cannot be read, and one that names no class and no field, are both errors and stop the
+  generation.
