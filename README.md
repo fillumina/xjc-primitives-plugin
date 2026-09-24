@@ -35,8 +35,12 @@ the single plugin did, are in
 
 With the XJC command line:
 
-```
+```sh
+# every primitive field
 xjc -extension -XReplacePrimitives schema.xsd
+
+# only the fields the selectors name
+xjc -extension -XReplacePrimitives -XReplacePrimitives:exclude=*#legacy[0-9] schema.xsd
 ```
 
 The option must be given before the plugins that copy the property types into other methods, such
@@ -127,9 +131,9 @@ order does not matter: the includes build a set of fields and the excludes take 
 | ---------------------------------------------------------- | -------------------------------------------------------- |
 | none                                                       | every primitive field                                    |
 | `include=*#amount`                                         | the `amount` field of every class                        |
-| `include=*#amount`, `include=*#total`                      | both of them, wherever they are                          |
+| `include=*#amount`<br>`include=*#total`                    | both of them, wherever they are                          |
 | `exclude=*#legacy[0-9]`                                    | every primitive field but the numbered legacy ones       |
-| `include=com.acme.Invoice`, `exclude=com.acme.Invoice#legacyCode` | every field of that class but `legacyCode`         |
+| `include=com.acme.Invoice`<br>`exclude=com.acme.Invoice#legacyCode` | every field of that class but `legacyCode`      |
 
 ### Examples
 
