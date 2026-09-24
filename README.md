@@ -21,6 +21,9 @@ does not bring the bean validation plugin with it.
 
 An example of it inside a real build, with the test of that wiring, is
 [`xjc-primitives-plugin-example`](https://github.com/fillumina/xjc-primitives-plugin-example).
+The three plugins of this line together in one build, which is where the split is shown to do what
+the single plugin did, are in
+[`xjc-plugins-example`](https://github.com/fillumina/xjc-plugins-example).
 
 ## Requirements
 
@@ -95,12 +98,22 @@ that has already been switched on: given alone it does nothing at all.
 -XReplacePrimitives:exclude=ClassGlob[#fieldGlob]
 ```
 
-| Part         | Meaning                                                                                                                                                                             |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ClassGlob`  | Qualified name of the generated class. `*` matches any sequence, `?` one character, and `[...]` one character of a set, of a range, or of a negated set, as in `[abc]`, `[a-z]` and `[!0-9]`; everything else is literal, so the `.` of a qualified name is not the "any character" of a pattern. |
-| `#fieldGlob` | Optional name of the field. Without it the selector covers every field of the class.                                                                                                 |
+| Part         | Meaning                                                                              |
+| ------------ | ------------------------------------------------------------------------------------ |
+| `ClassGlob`  | Qualified name of the generated class.                                               |
+| `#fieldGlob` | Optional name of the field. Without it the selector covers every field of the class.  |
 
-The glob syntax is the one of the `override` option of the sibling
+Both globs are matched with the same syntax:
+
+- `*` matches any sequence of characters;
+- `?` matches exactly one character;
+- `[...]` matches one character of a set, of a range, or of a negated set, as in `[abc]`, `[a-z]`
+  and `[!0-9]`; inside the brackets `*`, `?` and `\` are literal, and `-` is a range unless it
+  comes first or last;
+- everything else is literal, so the `.` of a qualified name is not the "any character" of a
+  pattern, and a `[` that is never closed is an error rather than a literal.
+
+The syntax is the one of the `override` option of the sibling
 [`xjc-bean-validation-plugin`](https://github.com/fillumina/xjc-bean-validation-plugin), and the
 matcher is copied from it.
 
