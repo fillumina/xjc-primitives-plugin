@@ -1,9 +1,12 @@
 # xjc-primitives-plugin
 
 An XJC plugin that replaces the primitive type of the generated fields with the matching boxed
-class, and follows the change through the getter and the setter. A constraint cannot be put on a
-primitive, so a schema whose field is `xs:int` has to become `Integer` before a bean validation
-annotation can be attached to it.
+class, and follows the change through the getter and the setter.
+
+A primitive cannot be absent. XJC generates a primitive for a required element, so an element the
+document does not carry arrives as `0` or `false`, indistinguishable from a value that was carried,
+and `@NotNull` on the field can never fail. The boxed class makes the absence a `null` the
+constraint can report.
 
 ```java
 protected int count;          // what XJC generates
@@ -42,16 +45,80 @@ The `include` and `exclude` options narrow which fields are boxed, see
 
 Inside a Maven build the plugin goes on the classpath of whatever runs XJC, which with the
 `jaxb-maven-plugin` means declaring it as a dependency of that plugin and passing
-`-XReplacePrimitives` among the arguments.
+`-XReplacePrimitives` among the arguments:
+
+```xml
+<plugin>
+  <groupId>org.jvnet.jaxb</groupId>
+  <artifactId>jaxb-maven-plugin</artifactId>
+  <version>4.0.9</version>
+  <executions>
+    <execution>
+      <goals>
+        <goal>generate</goal>
+      </goals>
+    </execution>
+  </executions>
+  <configuration>
+    <extension>true</extension>
+    <args>
+      <arg>-XReplacePrimitives</arg>
+      <arg>-XReplacePrimitives:exclude=*#legacy[0-9]</arg>
+    </args>
+    <plugins>
+      <plugin>
+        <groupId>com.fillumina</groupId>
+        <artifactId>xjc-primitives-plugin</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+      </plugin>
+    </plugins>
+  </configuration>
+</plugin>
+```
+
+Both arguments are needed: the bare option activates the plugin, the one carrying a value configures
+it.
 
 ## Selecting the fields
 
 Without a selector every primitive the plugin finds is boxed. The `include` and `exclude` options
-narrow that, one selector at a time, and both are additive: repeat the option to add a selector.
+narrow that: repeat either option to add a selector, and the two are additive.
 
 The plain `-XReplacePrimitives` is still required. XJC switches a plugin on when it sees the option
 name on its own, and an argument such as `-XReplacePrimitives:include=…` only configures a plugin
 that has already been switched on: given alone it does nothing at all.
+
+### The shape of a selector
+
+```text
+-XReplacePrimitives:include=ClassGlob[#fieldGlob]
+-XReplacePrimitives:exclude=ClassGlob[#fieldGlob]
+```
+
+| Part         | Meaning                                                                                                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ClassGlob`  | Qualified name of the generated class. `*` matches any sequence, `?` one character, and `[...]` one character of a set, of a range, or of a negated set, as in `[abc]`, `[a-z]` and `[!0-9]`; everything else is literal, so the `.` of a qualified name is not the "any character" of a pattern. |
+| `#fieldGlob` | Optional name of the field. Without it the selector covers every field of the class.                                                                                                 |
+
+The glob syntax is the one of the `override` option of the sibling
+[`xjc-bean-validation-plugin`](https://github.com/fillumina/xjc-bean-validation-plugin), and the
+matcher is copied from it.
+
+### What the two options do together
+
+With no selector every primitive field is boxed. With at least one `include` only the fields it
+selects are boxed, and an `exclude` takes fields out of that result whatever the includes say. The
+order does not matter: the includes build a set of fields and the excludes take from it.
+
+| Selectors                                                  | What is boxed                                            |
+| ---------------------------------------------------------- | -------------------------------------------------------- |
+| none                                                       | every primitive field                                    |
+| `include=*#amount`                                         | the `amount` field of every class                        |
+| `include=*#amount`, `include=*#total`                      | both of them, wherever they are                          |
+| `exclude=*#legacy[0-9]`                                    | every primitive field but the numbered legacy ones       |
+| `include=com.acme.Invoice`, `exclude=com.acme.Invoice#legacyCode` | every field of that class but `legacyCode`         |
+
+### Examples
 
 ```sh
 # only the amount of every class
@@ -66,15 +133,16 @@ xjc -extension -XReplacePrimitives \
     -XReplacePrimitives:include=com.acme.Invoice#total schema.xsd
 ```
 
-A selector is `ClassGlob[#fieldGlob]`:
+In a Maven build the same arguments go among the arguments of the codegen plugin:
 
-| Part         | Meaning                                                                                                                                                                             |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ClassGlob`  | Qualified name of the generated class. `*` matches any sequence, `?` one character, and `[...]` one character of a set, of a range, or of a negated set, as in `[abc]`, `[a-z]` and `[!0-9]`; everything else is literal, so the `.` of a qualified name is not the "any character" of a pattern. |
-| `#fieldGlob` | Optional name of the field. Without it the selector covers every field of the class.                                                                                                 |
+```xml
+<args>
+  <arg>-XReplacePrimitives</arg>
+  <arg>-XReplacePrimitives:exclude=*#legacy[0-9]</arg>
+</args>
+```
 
-With at least one `include`, only the fields it selects are boxed. An `exclude` takes fields out
-of that result whatever the includes say.
+### When a selector is refused
 
 A selector is an error in two cases, and either one stops the build:
 
@@ -88,10 +156,6 @@ A selector is an error in two cases, and either one stops the build:
 A field XJC has already boxed, as an optional attribute is, needs nothing from the plugin: a
 selector naming it is not a typo and is not reported.
 
-The glob syntax is the one of the `override` option of the sibling
-[`xjc-bean-validation-plugin`](https://github.com/fillumina/xjc-bean-validation-plugin), and the
-matcher is copied from it.
-
 ### What a field left alone means
 
 It keeps the type XJC generated, so `xs:int` stays `int` and the getter and setter follow:
@@ -99,8 +163,8 @@ It keeps the type XJC generated, so `xs:int` stays `int` and the getter and sett
 annotations.
 
 The bean validation plugin still computes the annotations of that property, `@NotNull` in
-particular, and writes them on the primitive field. Hibernate Validator 8.0.1 validates such a bean
-without a complaint, so nothing breaks at runtime, but a constraint on a primitive can never fail:
+particular, and writes them on the primitive field. Hibernate Validator validates such a bean
+without a complaint, so nothing breaks at runtime, but `@NotNull` on a primitive can never fail:
 the null check the schema asked for is gone. Exclude a field when the primitive is what is wanted,
 not to silence an annotation.
 
