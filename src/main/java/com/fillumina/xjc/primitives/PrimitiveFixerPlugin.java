@@ -25,7 +25,9 @@ import org.xml.sax.SAXParseException;
 /**
  * Replaces the primitive type of every generated field, and of the field's getter and setter, with
  * the matching boxed class, so that an annotation can be applied to the property: {@code int}
- * becomes {@link Integer}, {@code boolean} becomes {@link Boolean}, and so on.
+ * becomes {@link Integer}, {@code boolean} becomes {@link Boolean}, and so on. A boxed
+ * boolean keeps its original {@code isX()} method and gains {@code getX()} so JavaBeans
+ * introspection can read the nullable property.
  *
  * <p>The plugin is switched on with the {@code -XReplacePrimitives} option and is registered in
  * {@code META-INF/services/com.sun.tools.xjc.Plugin}. The {@code include} and {@code exclude}
@@ -151,8 +153,18 @@ public class PrimitiveFixerPlugin extends Plugin {
                 }
                 JClass boxedType = boxedType(classOutline, boxedClass);
                 field.type(boxedType);
-                getter(implClass, field).type(boxedType);
+                JMethod getter = getter(implClass, field);
+                getter.type(boxedType);
                 setter(implClass, field).listParams()[0].type(boxedType);
+                if (boxedClass == Boolean.class && getter.name().startsWith("is")) {
+                    // JavaBeans only recognizes isX() for primitive boolean. Keep XJC's
+                    // original method for callers, but expose a nullable getX() as well.
+                    String name = "get" + getter.name().substring(2);
+                    if (implClass.methods().stream().noneMatch(method -> method.name().equals(name)
+                            && method.listParams().length == 0)) {
+                        implClass.method(getter.mods().getValue(), boxedType, name).body()._return(field);
+                    }
+                }
             }
         }
         reportUnmatched(selectors, errorHandler);

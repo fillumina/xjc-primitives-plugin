@@ -2,6 +2,10 @@
 
 ## 1.0.0-SNAPSHOT
 
+- Boxed boolean properties now also have a `getX(): Boolean` accessor. This keeps the
+  existing `isX(): Boolean` API while making the property readable to JavaBeans
+  introspection; JAXB field access remains unchanged.
+
 - First release of the standalone plugin. It was carried inside `com.fillumina:krasa-jaxb-tools`
   until 2.8.0, in the same jar and the same service file as the bean validation plugin.
 - Jakarta only: built for JDK 21 and XJC 4, the Jakarta XML Binding 4 line. There is no `javax`

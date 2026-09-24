@@ -1,7 +1,13 @@
 # xjc-primitives-plugin
 
 An XJC plugin that replaces the primitive type of the generated fields with the matching boxed
-class, and follows the change through the getter and the setter.
+class, and follows the change through the getter and the setter. When an XJC `boolean`
+`isActive()` becomes `Boolean`, the plugin also adds `getActive(): Boolean`: JavaBeans
+`Introspector` does not treat `isActive(): Boolean` as a readable property. The original
+`isActive()` remains available, and JAXB field annotations and field-access binding stay intact.
+This change applies only when the plugin boxes a primitive boolean; a `Boolean` that XJC
+already generated (for example, an optional boolean attribute with `isFlag(): Boolean`)
+is left unchanged and may still be write-only to JavaBeans introspection.
 
 A primitive cannot be absent. XJC generates a primitive for a required element, so an element the
 document does not carry arrives as `0` or `false`, indistinguishable from a value that was carried,
