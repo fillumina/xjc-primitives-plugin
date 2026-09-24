@@ -16,6 +16,9 @@ wrote; the code here is a port of that one. It becomes its own artifact so that 
 needs the boxed types does not depend on the validation annotations as well, and so that adding it
 does not bring the bean validation plugin with it.
 
+An example of it inside a real build, with the test of that wiring, is
+[`xjc-primitives-plugin-example`](https://github.com/fillumina/xjc-primitives-plugin-example).
+
 ## Requirements
 
 - JDK 21 or newer.
