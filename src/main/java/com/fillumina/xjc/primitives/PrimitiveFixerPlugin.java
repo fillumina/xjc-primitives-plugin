@@ -23,19 +23,21 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /**
- * Replaces the primitive type of every generated field, and of the field's getter and setter, with
- * the matching boxed class, so that an annotation can be applied to the property: {@code int}
- * becomes {@link Integer}, {@code boolean} becomes {@link Boolean}, and so on. A boxed
- * boolean keeps its original {@code isX()} method and gains {@code getX()} so JavaBeans
+ * Replaces the primitive type of every generated field, and of the field's
+ * getter and setter, with the matching boxed class, so that an annotation can
+ * be applied to the property: {@code int} becomes {@link Integer},
+ * {@code boolean} becomes {@link Boolean}, and so on. A boxed boolean keeps its
+ * original {@code isX()} method and gains {@code getX()} so JavaBeans
  * introspection can read the nullable property.
  *
- * <p>The plugin is switched on with the {@code -XReplacePrimitives} option and is registered in
- * {@code META-INF/services/com.sun.tools.xjc.Plugin}. The {@code include} and {@code exclude}
- * options narrow which fields are boxed, instead of every primitive the plugin finds. An option
- * that cannot be read stops the generation before it starts; a selector that is well formed but
+ * <p>
+ * The plugin is switched on with the {@code -XReplacePrimitives} option and is
+ * registered in {@code META-INF/services/com.sun.tools.xjc.Plugin}. The
+ * {@code include} and {@code exclude} options narrow which fields are boxed,
+ * instead of every primitive the plugin finds. An option that cannot be read
+ * stops the generation before it starts; a selector that is well formed but
  * names nothing is only reported.
  *
- * @author Vojtech Krasa
  * @author Francesco Illuminati
  */
 public class PrimitiveFixerPlugin extends Plugin {
@@ -43,7 +45,10 @@ public class PrimitiveFixerPlugin extends Plugin {
     /** The option that switches this plugin on, without its leading dash. */
     public static final String PLUGIN_NAME = "XReplacePrimitives";
 
-    /** The plugin with the first option of a run, as it is written on the command line. */
+    /**
+     * The plugin with the first option of a run, as it is written on the command
+     * line.
+     */
     public static final String OPTION_PREFIX = "-" + PLUGIN_NAME + ":";
 
     /** The selectors of the {@code include} option, as they were given. */
@@ -52,12 +57,7 @@ public class PrimitiveFixerPlugin extends Plugin {
     /** The selectors of the {@code exclude} option, as they were given. */
     private final List<String> excludes = new ArrayList<>();
 
-    /**
-     * Creates the plugin. XJC instantiates it from the service file, so it takes no arguments.
-     */
-    public PrimitiveFixerPlugin() {
-    }
-
+    /** Mapping the boxed types. */
     private static final Map<String, Class<?>> BOXED_TYPES = Map.of(
             "int", Integer.class,
             "long", Long.class,
@@ -67,19 +67,32 @@ public class PrimitiveFixerPlugin extends Plugin {
             "byte", Byte.class,
             "short", Short.class);
 
+    /**
+     * Creates the plugin. XJC instantiates it from the service file, so it takes no
+     * arguments.
+     */
+    public PrimitiveFixerPlugin() {
+    }
+
     @Override
     public String getOptionName() {
         return PLUGIN_NAME;
     }
 
     /**
-     * Reads one option of this plugin. XJC activates a plugin for the argument equal to {@code "-"}
-     * plus {@link #getOptionName()} and hands every other argument to every plugin, so an argument
-     * this method does not recognize is left to XJC and the other plugins.
+     * Reads one option of this plugin. XJC activates a plugin for the argument
+     * equal to {@code "-"} plus {@link #getOptionName()} and hands every other
+     * argument to every plugin, so an argument this method does not recognize is
+     * left to XJC and the other plugins.
      *
-     * <p>An option of this plugin that cannot be read is refused with a {@code BadCommandLineException},
-     * which stops the generation before anything is written. A selector that is well formed but names
-     * nothing is not refused here: it is reported at the end of the run, see {@link #reportUnmatched}.
+     * <p>
+     * An option of this plugin that cannot be read is refused with a
+     * {@code BadCommandLineException}, which stops the generation before anything
+     * is written. A selector that is well formed but names nothing is not refused
+     * here: it is reported at the end of the run, see {@link #reportUnmatched}.
+     *
+     * @return the number of arguments consumed, which is 1 for every option of this
+     *         plugin
      */
     @Override
     public int parseArgument(Options opt, String[] args, int index) throws BadCommandLineException {
@@ -92,13 +105,13 @@ public class PrimitiveFixerPlugin extends Plugin {
             return 0;
         }
         final String rest = argument.substring(OPTION_PREFIX.length());
-        final int equals = rest.indexOf('=');
-        if (equals == -1) {
+        final int equalsIdx = rest.indexOf('=');
+        if (equalsIdx == -1) {
             throw new BadCommandLineException("the option " + argument + " needs a value, as in "
                     + OPTION_PREFIX + "include=com.acme.Invoice#amount");
         }
-        final String name = rest.substring(0, equals);
-        final String value = rest.substring(equals + 1);
+        final String name = rest.substring(0, equalsIdx);
+        final String value = rest.substring(equalsIdx + 1);
         final String error = Selectors.validate(value);
         if (error != null) {
             throw new BadCommandLineException("the option " + argument + ": " + error);
@@ -138,7 +151,8 @@ public class PrimitiveFixerPlugin extends Plugin {
                 if ("serialVersionUID".equals(field.name())) {
                     continue;
                 }
-                // asked of every field, so that a selector naming one there is nothing to do with,
+                // asked of every field, so that a selector naming one there is nothing to do
+                // with,
                 // as an attribute XJC has boxed on its own, is not reported as a typo
                 if (!selectors.accepts(className, field.name())) {
                     continue;
@@ -172,22 +186,23 @@ public class PrimitiveFixerPlugin extends Plugin {
     }
 
     /**
-     * Reports every selector that named no class and no field, once every class of the schema has
-     * been seen and the verdict is sure: a selector that matched nothing is as wrong as one that
-     * cannot be read, and the fields it was meant to name keep their primitive type without a word
-     * otherwise.
+     * Reports every selector that named no class and no field, once every class of
+     * the schema has been seen and the verdict is sure: a selector that matched
+     * nothing is as wrong as one that cannot be read, and the fields it was meant
+     * to name keep their primitive type without a word otherwise.
      */
     private void reportUnmatched(Selectors selectors, ErrorHandler errorHandler) throws SAXException {
         for (Selectors.Selector selector : selectors.unmatched()) {
-            // a null locator is an option-level mistake, which XJC reports as an unknown location
+            // a null locator is an option-level mistake, which XJC reports as an unknown
+            // location
             errorHandler.error(new SAXParseException(
                     selector + " matched no class and no field", (Locator) null));
         }
     }
 
     /**
-     * The boxed class as a type of the code model that owns the generated class, so that the field
-     * and its accessors all refer to the same model.
+     * The boxed class as a type of the code model that owns the generated class, so
+     * that the field and its accessors all refer to the same model.
      */
     private JClass boxedType(ClassOutline classOutline, Class<?> boxedClass) {
         JCodeModel codeModel = classOutline.implClass.owner();
@@ -195,8 +210,8 @@ public class PrimitiveFixerPlugin extends Plugin {
     }
 
     /**
-     * Finds the getter of a field: the method that starts with {@code get} or {@code is} and whose
-     * body is a plain {@code return field;}.
+     * Finds the getter of a field: the method that starts with {@code get} or
+     * {@code is} and whose body is a plain {@code return field;}.
      */
     JMethod getter(JDefinedClass type, JFieldVar field) {
         String expected = "return " + field.name() + ";";
@@ -213,8 +228,8 @@ public class PrimitiveFixerPlugin extends Plugin {
     }
 
     /**
-     * Finds the setter of a field: the method that starts with {@code set} and whose body assigns
-     * the field from its own parameter.
+     * Finds the setter of a field: the method that starts with {@code set} and
+     * whose body assigns the field from its own parameter.
      */
     JMethod setter(JDefinedClass type, JFieldVar field) {
         String expected = "this." + field.name() + " =";
@@ -231,8 +246,8 @@ public class PrimitiveFixerPlugin extends Plugin {
     }
 
     /**
-     * The source text of the first statement of a method body, or an empty string when the body is
-     * empty.
+     * The source text of the first statement of a method body, or an empty string
+     * when the body is empty.
      */
     private String firstStatement(JMethod method) {
         List<?> statements = method.body().getContents();

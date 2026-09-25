@@ -11,8 +11,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * The selectors of the {@code include} and {@code exclude} options: which fields they box, and what
- * is reported when one of them names nothing.
+ * The selectors of the {@code include} and {@code exclude} options: which
+ * fields they box, and what is reported when one of them names nothing.
  */
 class SelectorsTest {
 
@@ -117,7 +117,8 @@ class SelectorsTest {
 
     @Test
     void anExcludeIsStillAskedWhenAnIncludeHasAlreadyLeftTheFieldOut() {
-        // the exclude names a field the include does not cover: it is asked all the same, so that it
+        // the exclude names a field the include does not cover: it is asked all the
+        // same, so that it
         // is not reported as a typo
         Selectors selectors = Selectors.of(List.of("*#amount"), List.of("*#legacyCode"));
 
@@ -174,4 +175,5 @@ class SelectorsTest {
         assertFalse(selectors.accepts(INVOICE, "amount"));
         assertEquals("include=*#amout", selectors.unmatched().get(0).toString());
     }
+
 }
