@@ -25,22 +25,24 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Generates a schema with primitive fields through XJC and checks what the plugin produced, with the
- * selectors and without them.
+ * Generates a schema with primitive fields through XJC and checks what the
+ * plugin produced, with the selectors and without them.
  *
- * <p>Generation runs in this JVM through {@link Driver}, the entry point of the {@code xjc}
- * command line, so the test needs neither a Maven build nor a lifecycle. The expected text is
- * collapsed to single spaces first, which makes the assertions independent of how the generator
- * wraps its lines.
+ * <p>
+ * Generation runs in this JVM through {@link Driver}, the entry point of the
+ * {@code xjc} command line, so the test needs neither a Maven build nor a
+ * lifecycle. The expected text is collapsed to single spaces first, which makes
+ * the assertions independent of how the generator wraps its lines.
  */
 class PrimitiveFixerPluginTest {
 
     private static final Path SCHEMA = Path.of("src", "test", "resources", "primitives.xsd");
 
     /**
-     * One primitive field of the schema, with the type XJC gives it and the one the plugin gives it
-     * instead. The boolean attribute {@code flag} is not here: XJC boxes an optional attribute on its
-     * own, so the plugin has nothing to do with it.
+     * One primitive field of the schema, with the type XJC gives it and the one the
+     * plugin gives it instead. The boolean attribute {@code flag} is not here: XJC
+     * boxes an optional attribute on its own, so the plugin has nothing to do with
+     * it.
      */
     private record Field(String name, String primitive, String boxed) {
 
@@ -151,7 +153,8 @@ class PrimitiveFixerPluginTest {
 
     @Test
     void aCharacterClassSelectsSeveralFields() throws Exception {
-        // the fields that start with an a followed by c or m: amount and active, but not count
+        // the fields that start with an a followed by c or m: amount and active, but
+        // not count
         String generated = generate(true, "-XReplacePrimitives:include=*#a[cm]*");
 
         assertBoxed(generated, field("amount"));
@@ -188,7 +191,8 @@ class PrimitiveFixerPluginTest {
 
     @Test
     void aFieldThatIsAlreadyBoxedIsLeftAloneAndNotReported() throws Exception {
-        // XJC boxes the optional attribute on its own, so a selector naming it has nothing to do and
+        // XJC boxes the optional attribute on its own, so a selector naming it has
+        // nothing to do and
         // is not an error
         Run run = run(true, "-XReplacePrimitives:include=*#flag");
 
@@ -232,7 +236,8 @@ class PrimitiveFixerPluginTest {
 
     @Test
     void aSelectorNamingAClassTheOutlineDoesNotHoldIsAnError() throws Exception {
-        // ObjectFactory is generated but is not a class of the outline, so a selector naming it
+        // ObjectFactory is generated but is not a class of the outline, so a selector
+        // naming it
         // selected nothing
         Run run = run(true, "-XReplacePrimitives:include=*ObjectFactory");
 
@@ -252,6 +257,27 @@ class PrimitiveFixerPluginTest {
 
             assertTrue(thrown.getMessage().contains("include=" + broken), thrown.getMessage());
         }
+    }
+
+    @Test
+    void theErrorOfASelectorWithoutAClassOrAFieldNamesTheOptionOnce() {
+        PrimitiveFixerPlugin plugin = new PrimitiveFixerPlugin();
+
+        for (String option : List.of("include", "exclude")) {
+            String argument = "-XReplacePrimitives:" + option + "=#amount";
+            BadCommandLineException thrown = assertThrows(BadCommandLineException.class,
+                    () -> plugin.parseArgument(new Options(), new String[] { argument }, 0));
+
+            assertEquals("the option " + argument + ": no class name before the #",
+                    thrown.getMessage());
+        }
+
+        String argument = "-XReplacePrimitives:exclude=com.acme.Invoice#";
+        BadCommandLineException thrown = assertThrows(BadCommandLineException.class,
+                () -> plugin.parseArgument(new Options(), new String[] { argument }, 0));
+
+        assertEquals("the option " + argument + ": no field name after the #",
+                thrown.getMessage());
     }
 
     @Test
@@ -286,7 +312,8 @@ class PrimitiveFixerPluginTest {
 
     @Test
     void aSelectorAloneDoesNotSwitchThePluginOn() throws Exception {
-        // XJC activates a plugin for the plain option only: given without it, the selector is read
+        // XJC activates a plugin for the plain option only: given without it, the
+        // selector is read
         // and then nothing is boxed, which is a trap worth pinning
         String generated = generate(false, "-XReplacePrimitives:include=*#count");
 
@@ -321,9 +348,10 @@ class PrimitiveFixerPluginTest {
     }
 
     /**
-     * A primitive field whose accessor is missing cannot be followed, and the plugin says so rather
-     * than leaving a half-boxed property behind. XJC always writes the accessors, so the situation
-     * is built here instead of through a schema.
+     * A primitive field whose accessor is missing cannot be followed, and the
+     * plugin says so rather than leaving a half-boxed property behind. XJC always
+     * writes the accessors, so the situation is built here instead of through a
+     * schema.
      */
     @Test
     void aPrimitiveFieldWithoutAccessorsIsRefused() throws Exception {
@@ -349,7 +377,9 @@ class PrimitiveFixerPluginTest {
                 field.name() + " is still primitive: " + generated);
     }
 
-    /** Asserts that the field and both its accessors carry the type XJC generated. */
+    /**
+     * Asserts that the field and both its accessors carry the type XJC generated.
+     */
     private static void assertPrimitive(String generated, Field field) {
         assertTrue(generated.contains("protected " + field.primitive() + " " + field.name() + ";"),
                 field.name() + " is not primitive: " + generated);
@@ -415,7 +445,10 @@ class PrimitiveFixerPluginTest {
         return run.source();
     }
 
-    /** The one generated class that holds the fields, whatever package XJC has chosen. */
+    /**
+     * The one generated class that holds the fields, whatever package XJC has
+     * chosen.
+     */
     private Path generatedSource() throws Exception {
         try (Stream<Path> files = Files.walk(outputDirectory)) {
             return files

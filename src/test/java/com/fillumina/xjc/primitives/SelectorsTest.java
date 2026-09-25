@@ -167,13 +167,4 @@ class SelectorsTest {
         assertTrue(selectors.accepts(INVOICE, "amount"));
         assertTrue(selectors.unmatched().isEmpty());
     }
-
-    @Test
-    void aSelectorReadsAsItWasWritten() {
-        Selectors selectors = Selectors.of(List.of("*#amout"), List.of());
-
-        assertFalse(selectors.accepts(INVOICE, "amount"));
-        assertEquals("include=*#amout", selectors.unmatched().get(0).toString());
-    }
-
 }

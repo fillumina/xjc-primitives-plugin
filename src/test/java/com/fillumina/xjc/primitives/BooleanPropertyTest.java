@@ -23,9 +23,13 @@ import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** Checks the JavaBeans API of actual compiled XJC output, including selective boxing. */
+/**
+ * Checks the JavaBeans API of actual compiled XJC output, including selective
+ * boxing.
+ */
 class BooleanPropertyTest {
-    @TempDir Path directory;
+    @TempDir
+    Path directory;
 
     @Test
     void compiledPropertiesStayReadableAndWritable() throws Exception {
@@ -89,7 +93,8 @@ class BooleanPropertyTest {
                             default -> throw new AssertionError(name);
                         };
                     }
-                    PropertyDescriptor descriptor = Arrays.stream(Introspector.getBeanInfo(bean).getPropertyDescriptors())
+                    PropertyDescriptor descriptor = Arrays
+                            .stream(Introspector.getBeanInfo(bean).getPropertyDescriptors())
                             .filter(p -> p.getName().equals(name)).findFirst().orElseThrow();
                     assertNotNull(descriptor.getReadMethod(), mode + ": " + name);
                     assertNotNull(descriptor.getWriteMethod(), mode + ": " + name);

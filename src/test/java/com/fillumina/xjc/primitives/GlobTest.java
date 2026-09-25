@@ -8,9 +8,9 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * The glob of a generated name: {@code *}, {@code ?} and the character classes. The cases are the
- * ones the sibling {@code xjc-bean-validation-plugin} pins for its {@code override} option, whose
- * matcher this one is copied from.
+ * The glob of a generated name: {@code *}, {@code ?} and the character classes.
+ * The cases are the ones the sibling {@code xjc-bean-validation-plugin} pins
+ * for its {@code override} option, whose matcher this one is copied from.
  */
 class GlobTest {
 
@@ -42,7 +42,8 @@ class GlobTest {
     void aCharacterClassMatchesOneOfItsCharacters() {
         assertTrue(matches("cod[e]", "code"));
         assertFalse(matches("cod[e]", "codf"));
-        // the whole name is matched: a class is one character, not the beginning of a name
+        // the whole name is matched: a class is one character, not the beginning of a
+        // name
         assertFalse(matches("cod[e]", "codee"));
     }
 
@@ -131,8 +132,10 @@ class GlobTest {
 
     @Test
     void aPairOfAmpersandsIsTheEmptyIntersectionOfAPattern() {
-        // a pattern reads && inside a class as the intersection of two sets, so this one holds
-        // nothing at all. No generated name holds an &, so it is a typo either way, and the selector
+        // a pattern reads && inside a class as the intersection of two sets, so this
+        // one holds
+        // nothing at all. No generated name holds an &, so it is a typo either way, and
+        // the selector
         // that carries it is reported as one.
         assertFalse(matches("item[a&&b]", "itema"));
         assertFalse(matches("item[a&&b]", "item&"));

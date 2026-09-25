@@ -38,6 +38,7 @@ import org.xml.sax.SAXParseException;
  * stops the generation before it starts; a selector that is well formed but
  * names nothing is only reported.
  *
+ * @author Vojtech Krasa
  * @author Francesco Illuminati
  */
 public class PrimitiveFixerPlugin extends Plugin {
@@ -90,9 +91,6 @@ public class PrimitiveFixerPlugin extends Plugin {
      * {@code BadCommandLineException}, which stops the generation before anything
      * is written. A selector that is well formed but names nothing is not refused
      * here: it is reported at the end of the run, see {@link #reportUnmatched}.
-     *
-     * @return the number of arguments consumed, which is 1 for every option of this
-     *         plugin
      */
     @Override
     public int parseArgument(Options opt, String[] args, int index) throws BadCommandLineException {

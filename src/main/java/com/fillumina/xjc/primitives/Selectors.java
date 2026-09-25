@@ -38,13 +38,14 @@ final class Selectors {
     private static final Selectors ALL = new Selectors(Collections.<Selector>emptyList(),
             Collections.<Selector>emptyList());
 
+    /** The option a selector belongs to. */
     static enum Option {
         include, exclude
     }
 
     /**
      * @return {@code null} when the selector is well formed, the reason when it is
-     *         not.
+     * not.
      */
     static String validate(String selector) {
         try {
@@ -80,12 +81,13 @@ final class Selectors {
 
     /**
      * @return whether the field is to be boxed: every primitive when no selector
-     *         was given, only the ones an include selects otherwise, and none of
-     *         the ones an exclude selects
+     * was given, only the ones an include selects otherwise, and none of the ones
+     * an exclude selects
      */
     boolean accepts(String className, String fieldName) {
         // both sides are asked, without short-circuiting, so that a selector is
-        // reported as unmatched only when it really selected nothing
+        // reported as
+        // unmatched only when it really selected nothing
         boolean included = includes.isEmpty() || matchesAny(includes, className, fieldName);
         boolean excluded = matchesAny(excludes, className, fieldName);
         return included && !excluded;
@@ -101,8 +103,8 @@ final class Selectors {
 
     /**
      * @return the selectors that selected no class and no field, which are likely
-     *         typos: a selector that does nothing is worse than none, because the
-     *         fields it was meant to name stay as they were without a word
+     * typos: a selector that does nothing is worse than none, because the fields it
+     * was meant to name stay as they were without a word
      */
     List<Selector> unmatched() {
         List<Selector> unmatched = new ArrayList<>();
@@ -129,7 +131,7 @@ final class Selectors {
 
         /**
          * @throws IllegalArgumentException when the selector is not one a glob can
-         *                                  read.
+         * read.
          */
         static Selector parse(Option option, String text) {
             if (text == null) {
@@ -146,14 +148,10 @@ final class Selectors {
                 classGlob = value.substring(0, hashIdx).trim();
                 fieldGlob = value.substring(hashIdx + 1).trim();
                 if (classGlob.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            option.name() + " " + text +
-                                    ": no class name before the #");
+                    throw new IllegalArgumentException("no class name before the #");
                 }
                 if (fieldGlob.isEmpty()) {
-                    throw new IllegalArgumentException(
-                            option.name() + " " + text +
-                                    ": no field name after the #");
+                    throw new IllegalArgumentException("no field name after the #");
                 }
             }
             return new Selector(option, value, Glob.of(classGlob),
@@ -169,7 +167,7 @@ final class Selectors {
 
         /**
          * @return whether the selector names this field, remembering that it named
-         *         something.
+         * something.
          */
         boolean matches(String className, String fieldName) {
             if (!classGlob.matches(className)) {
@@ -189,7 +187,7 @@ final class Selectors {
 
         /**
          * @return the selector as it was written on the command line, without the
-         *         leading dash.
+         * leading dash.
          */
         @Override
         public String toString() {

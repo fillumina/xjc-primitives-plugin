@@ -31,8 +31,8 @@ final class Glob {
     /**
      * @return the glob of the given text
      * @throws IllegalArgumentException when the glob is not one a pattern can read,
-     *                                  which is reported as an error of the option
-     *                                  rather than failing during generation
+     * which is reported as an error of the option rather than failing during
+     * generation
      */
     static Glob of(String text) {
         return new Glob(text, toPattern(text));
@@ -50,9 +50,9 @@ final class Glob {
 
     /**
      * @return the glob as a pattern: {@code *} matches any sequence, {@code ?} one
-     *         character, and {@code [...]} one character of a set, as
-     *         {@code [abc]}, of a range, as {@code [a-z]}, or of a negated set, as
-     *         {@code [!abc]} and {@code [^abc]}. Everything else is literal.
+     * character, and {@code [...]} one character of a set, as {@code [abc]}, of a
+     * range, as {@code [a-z]}, or of a negated set, as {@code [!abc]} and
+     * {@code [^abc]}. Everything else is literal.
      */
     private static Pattern toPattern(String glob) {
         StringBuilder regex = new StringBuilder("^");
@@ -118,5 +118,4 @@ final class Glob {
     public String toString() {
         return text;
     }
-
 }
