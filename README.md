@@ -25,6 +25,13 @@ wrote; the code here is a port of that one. It becomes its own artifact so that 
 needs the boxed types does not depend on the validation annotations as well, and so that adding it
 does not bring the bean validation plugin with it.
 
+The other two pieces of that line are
+[`xjc-bean-validation-plugin`](https://github.com/fillumina/xjc-bean-validation-plugin), which
+writes the constraints a schema states, and
+[`cxf-validation-frontend`](https://github.com/fillumina/cxf-validation-frontend), which puts
+`@Valid` on the service interface generated from a WSDL. This plugin is what makes a constraint
+such as `@NotNull` mean something on a primitive, so the three are usually used together.
+
 An example of it inside a real build, with the test of that wiring, is
 [`xjc-primitives-plugin-example`](https://github.com/fillumina/xjc-primitives-plugin-example).
 The three plugins of this line together in one build, which is where the split is shown to do what
@@ -165,19 +172,27 @@ In a Maven build the same arguments go among the arguments of the codegen plugin
 </args>
 ```
 
-### When a selector is refused
+### When a selector is refused, and when it is only a warning
 
-A selector is an error in two cases, and either one stops the build:
+A selector that is not one a glob can read stops the build. So does an option that carries no
+value, or that names something other than `include` and `exclude`. All three are refused while the
+options are read, before anything is generated, so a mistake in the command line is reported against
+the command line.
 
-- it is not a selector a glob can read, as `*#item[9-0]`; or an option carries no value; or an option
-  names something other than `include` and `exclude`. This is refused while the options are read,
-  before anything is generated.
-- it names no class and no field. This is refused at the end of the run, once every class of the
-  schema has been seen and the verdict is sure, because until then a class it names may still be
-  coming.
+A selector that is well formed but names no class and no field of this schema is only a warning:
+
+```text
+[WARNING] include=*#amout matched no class and no field in this schema
+```
+
+The generation goes on, and the fields the selector meant to name keep the type XJC gave them. The
+same selectors are often given to several schemas, and a field that only some of them carry is not a
+mistake, so this is reported once every class of the schema has been seen, when the verdict is
+sure, and the build does not fail. Note that XJC's own `-quiet` hides warnings, so a build that
+passes it may print nothing at all.
 
 A field XJC has already boxed, as an optional attribute is, needs nothing from the plugin: a
-selector naming it is not a typo and is not reported.
+selector naming it has matched, so it is not reported.
 
 ### What a field left alone means
 
@@ -185,7 +200,8 @@ It keeps the type XJC generated, so `xs:int` stays `int` and the getter and sett
 `getAmount(): int`, `setAmount(int)`. That is a change in the generated API, not only in the
 annotations.
 
-The bean validation plugin still computes the annotations of that property, `@NotNull` in
+The [`xjc-bean-validation-plugin`](https://github.com/fillumina/xjc-bean-validation-plugin)
+still computes the annotations of that property, `@NotNull` in
 particular, and writes them on the primitive field. Hibernate Validator validates such a bean
 without a complaint, so nothing breaks at runtime, but `@NotNull` on a primitive can never fail:
 the null check the schema asked for is gone. Exclude a field when the primitive is what is wanted,
