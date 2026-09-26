@@ -5,7 +5,7 @@
 
   <groupId>com.fillumina</groupId>
   <artifactId>xjc-primitives-plugin</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
   <name>xjc-primitives-plugin</name>
 
@@ -216,13 +216,18 @@
 
   <!--
     INSTRUCTIONS FOR DEPLOYING:
-    - remember to set default JDK to version 21
+    - set the default JDK to version 21
+    - the artifacts have to be signed, and Central rejects a signature made with a key that has
+      expired, so check that the key behind gpg.keyname is still valid and registered on
+      https://central.sonatype.com/publishing/gpg/
+    - gpg.keyname and gpg.passphrase are read from the Maven settings, along with the 'central'
+      server holding the Central token
     - deploy with (-X is for verbose error reporting):
       mvn -Pcentral clean deploy -X
-    - complete the procedure:
+    - the profile publishes through the Central Portal, and central-publishing-maven-plugin is
+      configured with autoPublish, so there is no staging repository to close and nothing to
+      release by hand afterwards
+    - the deployment and the published artifacts are listed at
       https://central.sonatype.com/publishing/deployments
-    - look for the 'Staging repositories' and then 'close' it.
-    - wait a little until it says 'repository closed'
-    - click on 'release'
   -->
 </project>
