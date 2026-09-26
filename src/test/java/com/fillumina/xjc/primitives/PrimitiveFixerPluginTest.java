@@ -2,7 +2,6 @@ package com.fillumina.xjc.primitives;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -194,7 +193,7 @@ class PrimitiveFixerPluginTest {
         // XJC boxes the optional attribute on its own, so a selector naming it has
         // nothing to do and
         // is not an error
-        Run run = run(true, "-XReplacePrimitives:include=*#flag");
+        Run run = loud(true, "-XReplacePrimitives:include=*#flag");
 
         assertEquals(0, run.exitCode(), run.messages());
         assertTrue(run.source().contains("protected Boolean flag;"), run.source());
@@ -205,45 +204,60 @@ class PrimitiveFixerPluginTest {
     }
 
     @Test
-    void aSelectorThatNamesNoFieldIsAnError() throws Exception {
-        // the run is quiet, and an error is what a quiet run does not silence
-        Run run = run(true, "-XReplacePrimitives:include=*#amout");
+    void aSelectorThatNamesNoFieldIsAWarningAndTheGenerationGoesOn() throws Exception {
+        // the same selectors are given to several schemas, so a field this one does
+        // not have is a warning and not an error
+        Run run = loud(true, "-XReplacePrimitives:include=*#amout");
 
-        assertNotEquals(0, run.exitCode(), run.messages());
+        assertEquals(0, run.exitCode(), run.messages());
         assertTrue(run.messages().contains(
-                "[ERROR] include=*#amout matched no class and no field"), run.messages());
+                "[WARNING] include=*#amout matched no class and no field in this schema"),
+                run.messages());
+        // nothing is boxed, because the one selector named no field, and the class is
+        // still generated
+        for (Field field : FIELDS) {
+            assertPrimitive(run.source(), field);
+        }
     }
 
     @Test
-    void aSelectorThatNamesNoFieldIsAnErrorWhenItExcludes() throws Exception {
-        Run run = run(true, "-XReplacePrimitives:exclude=*#amout");
+    void aSelectorThatNamesNoFieldIsAWarningWhenItExcludes() throws Exception {
+        Run run = loud(true, "-XReplacePrimitives:exclude=*#amout");
 
-        assertNotEquals(0, run.exitCode(), run.messages());
+        assertEquals(0, run.exitCode(), run.messages());
         assertTrue(run.messages().contains(
-                "[ERROR] exclude=*#amout matched no class and no field"), run.messages());
+                "[WARNING] exclude=*#amout matched no class and no field in this schema"),
+                run.messages());
+        for (Field field : FIELDS) {
+            assertBoxed(run.source(), field);
+        }
     }
 
     @Test
-    void onlyTheSelectorThatNamedNothingIsAnError() throws Exception {
-        Run run = run(true, "-XReplacePrimitives:include=*#count",
+    void onlyTheSelectorThatNamedNothingIsWarnedAbout() throws Exception {
+        Run run = loud(true, "-XReplacePrimitives:include=*#count",
                 "-XReplacePrimitives:include=*#amout");
 
-        assertNotEquals(0, run.exitCode(), run.messages());
-        assertTrue(run.messages().contains("[ERROR] include=*#amout matched no class and no field"),
+        assertEquals(0, run.exitCode(), run.messages());
+        assertTrue(run.messages().contains(
+                "[WARNING] include=*#amout matched no class and no field in this schema"),
                 run.messages());
-        assertFalse(run.messages().contains("[ERROR] include=*#count"), run.messages());
+        assertFalse(run.messages().contains("include=*#count"), run.messages());
+        // the selector that did name a field still boxes it
+        assertBoxed(run.source(), field("count"));
     }
 
     @Test
-    void aSelectorNamingAClassTheOutlineDoesNotHoldIsAnError() throws Exception {
+    void aSelectorNamingAClassTheOutlineDoesNotHoldIsAWarning() throws Exception {
         // ObjectFactory is generated but is not a class of the outline, so a selector
         // naming it
         // selected nothing
-        Run run = run(true, "-XReplacePrimitives:include=*ObjectFactory");
+        Run run = loud(true, "-XReplacePrimitives:include=*ObjectFactory");
 
-        assertNotEquals(0, run.exitCode(), run.messages());
+        assertEquals(0, run.exitCode(), run.messages());
         assertTrue(run.messages().contains(
-                "[ERROR] include=*ObjectFactory matched no class and no field"), run.messages());
+                "[WARNING] include=*ObjectFactory matched no class and no field in this schema"),
+                run.messages());
     }
 
     @Test
@@ -403,17 +417,41 @@ class PrimitiveFixerPluginTest {
     }
 
     /**
-     * Runs XJC once over the schema.
+     * Runs XJC once over the schema. The run is quiet, as a build is, so the messages
+     * hold only what XJC cannot let pass.
      *
      * @param replacePrimitives whether the plugin is switched on
      * @param extraArguments further arguments, such as an {@code include} selector
      */
     private Run run(boolean replacePrimitives, String... extraArguments) throws Exception {
+        return xjc(true, replacePrimitives, extraArguments);
+    }
+
+    /**
+     * Runs XJC once over the schema without {@code -quiet}, which is the only way the
+     * warnings a quiet run swallows are in the messages.
+     *
+     * @param replacePrimitives whether the plugin is switched on
+     * @param extraArguments further arguments, such as an {@code include} selector
+     */
+    private Run loud(boolean replacePrimitives, String... extraArguments) throws Exception {
+        return xjc(false, replacePrimitives, extraArguments);
+    }
+
+    /**
+     * @param quiet whether to pass {@code -quiet} to XJC
+     * @param replacePrimitives whether the plugin is switched on
+     * @param extraArguments further arguments, such as an {@code include} selector
+     */
+    private Run xjc(boolean quiet, boolean replacePrimitives, String... extraArguments)
+            throws Exception {
         Path schema = SCHEMA.toAbsolutePath();
         assertTrue(Files.exists(schema), "schema not found: " + schema);
 
         List<String> arguments = new ArrayList<>();
-        arguments.add("-quiet");
+        if (quiet) {
+            arguments.add("-quiet");
+        }
         arguments.add("-extension");
         arguments.add("-d");
         arguments.add(outputDirectory.toString());

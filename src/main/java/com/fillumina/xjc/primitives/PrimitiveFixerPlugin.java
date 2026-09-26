@@ -35,8 +35,10 @@ import org.xml.sax.SAXParseException;
  * registered in {@code META-INF/services/com.sun.tools.xjc.Plugin}. The
  * {@code include} and {@code exclude} options narrow which fields are boxed,
  * instead of every primitive the plugin finds. An option that cannot be read
- * stops the generation before it starts; a selector that is well formed but
- * names nothing is only reported.
+ * stops the generation before it starts. A selector that is well formed but
+ * names nothing in this schema is a warning and not an error, because the same
+ * selectors are often given to several schemas and a field one of them does not
+ * have is not a mistake.
  *
  * @author Vojtech Krasa
  * @author Francesco Illuminati
@@ -184,17 +186,18 @@ public class PrimitiveFixerPlugin extends Plugin {
     }
 
     /**
-     * Reports every selector that named no class and no field, once every class of
-     * the schema has been seen and the verdict is sure: a selector that matched
-     * nothing is as wrong as one that cannot be read, and the fields it was meant
-     * to name keep their primitive type without a word otherwise.
+     * Warns about every selector that named no class and no field, once every class
+     * of the schema has been seen and the verdict is sure. It is a warning and not
+     * an error: one set of selectors is often given to several schemas, and a field
+     * that only some of them carry is not a mistake, so the generation goes on and
+     * the fields this selector meant to name keep the type XJC gave them.
      */
     private void reportUnmatched(Selectors selectors, ErrorHandler errorHandler) throws SAXException {
         for (Selectors.Selector selector : selectors.unmatched()) {
-            // a null locator is an option-level mistake, which XJC reports as an unknown
-            // location
-            errorHandler.error(new SAXParseException(
-                    selector + " matched no class and no field", (Locator) null));
+            // a null locator is an option-level observation, which XJC reports as an
+            // unknown location
+            errorHandler.warning(new SAXParseException(
+                    selector + " matched no class and no field in this schema", (Locator) null));
         }
     }
 

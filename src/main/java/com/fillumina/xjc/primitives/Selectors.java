@@ -27,9 +27,10 @@ import java.util.List;
  * <p>
  * A selector that is not one a glob can read is refused while the options are
  * read, before anything is generated, see {@link #validate(String)}. A selector
- * that is well formed but names no class and no field is not an error: it is
- * reported at the end of the run, and the fields it was meant to name keep
- * their primitive type.
+ * that is well formed but names no class and no field of this schema is not an
+ * error: it is a warning at the end of the run, because the same selectors are
+ * often given to several schemas, and the fields it meant to name keep the type
+ * XJC generated for them.
  *
  * @author Francesco Illuminati
  */
@@ -102,9 +103,9 @@ final class Selectors {
     }
 
     /**
-     * @return the selectors that selected no class and no field, which are likely
-     * typos: a selector that does nothing is worse than none, because the fields it
-     * was meant to name stay as they were without a word
+     * @return the selectors that selected no class and no field of this schema, which
+     * are worth a warning: they may be typos, or they may name fields of another
+     * schema the same selectors are given to
      */
     List<Selector> unmatched() {
         List<Selector> unmatched = new ArrayList<>();
