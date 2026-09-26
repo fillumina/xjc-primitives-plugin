@@ -1,3 +1,5 @@
+[![Maven Central](https://img.shields.io/maven-central/v/com.fillumina/xjc-primitives-plugin.svg)](https://central.sonatype.com/artifact/com.fillumina/xjc-primitives-plugin)
+
 # xjc-primitives-plugin
 
 An XJC plugin that replaces the primitive type of the generated fields with the matching boxed
@@ -39,8 +41,6 @@ the single plugin did, are in
 [`xjc-plugins-example`](https://github.com/fillumina/xjc-plugins-example).
 
 ## Version and status
-
-[![Maven Central](https://img.shields.io/maven-central/v/com.fillumina/xjc-primitives-plugin.svg)](https://central.sonatype.com/artifact/com.fillumina/xjc-primitives-plugin)
 
 The released version is **1.0.0**, published on Maven Central. The option name, its defaults and
 the types it writes stay the same within 1.x; a field it boxes or leaves alone in the wrong way is
